@@ -8,44 +8,62 @@ using FunBookDataAccess;
 using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace FunBook.Controllers
 {
     public class UsersController : ApiController
     {
-        SqlConnection con = new SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["SqlConnection"].ConnectionString);
-
-        public IEnumerable<tbl_userdetails> Get()
+        public async Task<IEnumerable<spGetalldetails_Result>> GetUsers()
         {
             using (dbFunbookEntities entities = new dbFunbookEntities())
             {
-                return entities.tbl_userdetails.ToList();
+                    try
+                    {
+                        return await entities.Database.SqlQuery<spGetalldetails_Result>("spGetalldetails").ToListAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
             }
         }
 
        
-
         [HttpPost]
-        public string PostRegistration(string email, string name, string password)
+        public HttpResponseMessage PostRegistration(string email, string name, string password)
         {
             using (dbFunbookEntities entities = new dbFunbookEntities())
             {
-                var result = entities.spUserReg(email, name, password);
-                return result.ToString();
+                var result = entities.spUserReg(email, name, password).FirstOrDefault();
+                var output = new
+                {
+                    Result = result
+                };
+                return Request.CreateResponse(HttpStatusCode.OK, output);
+                //return Ok(new
+                //{
+                //    value = result
+                //});
             }
         }
     
-
 
         [HttpPost]
         public HttpResponseMessage PostCheckLogin(string email, string password)
         {
                 using (dbFunbookEntities entities = new dbFunbookEntities())
                 {
+                var userAgent = Request.Headers.UserAgent.ToString();
                 string pwd= GetMd5HashData(password);
                 pwd = pwd.ToUpper();
                 var result = entities.spChecklogin(email, pwd).FirstOrDefault();
-                    return Request.CreateResponse(HttpStatusCode.OK, result);
+                var output = new
+                {
+                    Result = result
+                };
+                return Request.CreateResponse(HttpStatusCode.OK, output);
+                //return Request.CreateResponse(HttpStatusCode.OK, result);
             }
         }
 
@@ -55,19 +73,5 @@ namespace FunBook.Controllers
             return string.Join("", MD5.Create().ComputeHash(System.Text.Encoding.ASCII.GetBytes(stext)).Select(s => s.ToString("x2")));
         }
 
-
-
-        [HttpPost]
-        public HttpResponseMessage PostGetlogins()
-        {
-            SqlCommand cmd = new SqlCommand("spGetlogins", con);
-            DataTable dt = new DataTable();
-            cmd.CommandType = CommandType.StoredProcedure;
-            SqlDataAdapter da = new SqlDataAdapter(cmd);
-            con.Open();
-            da.Fill(dt);
-            con.Close();
-            return Request.CreateResponse(HttpStatusCode.OK, dt);
-        }
     }
 }
