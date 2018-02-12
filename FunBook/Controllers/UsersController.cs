@@ -9,6 +9,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using FunBook.Models;
 
 namespace FunBook.Controllers
 {
@@ -28,8 +29,7 @@ namespace FunBook.Controllers
                     }
             }
         }
-
-       
+      
         [HttpPost]
         public HttpResponseMessage PostRegistration(string email, string name, string password)
         {
@@ -41,30 +41,25 @@ namespace FunBook.Controllers
                     Result = result
                 };
                 return Request.CreateResponse(HttpStatusCode.OK, output);
-                //return Ok(new
-                //{
-                //    value = result
-                //});
             }
         }
     
 
         [HttpPost]
-        public HttpResponseMessage PostCheckLogin(string email, string password)
+        public HttpResponseMessage PostCheckLogin(string email,string password)
         {
                 using (dbFunbookEntities entities = new dbFunbookEntities())
                 {
-                var userAgent = Request.Headers.UserAgent.ToString();
-                string pwd= GetMd5HashData(password);
-                pwd = pwd.ToUpper();
-                var result = entities.spChecklogin(email, pwd).FirstOrDefault();
-                var output = new
-                {
-                    Result = result
-                };
-                return Request.CreateResponse(HttpStatusCode.OK, output);
-                //return Request.CreateResponse(HttpStatusCode.OK, result);
-            }
+                    var userAgent = Request.Headers.UserAgent.ToString();
+                    string pwd = GetMd5HashData(password);
+                    pwd = pwd.ToUpper();
+                    var result = entities.spChecklogin(email, pwd).FirstOrDefault();
+                    var output = new
+                    {
+                        Result = result
+                    };
+                    return Request.CreateResponse(HttpStatusCode.OK, output);
+                }
         }
 
         //Generate hashing
